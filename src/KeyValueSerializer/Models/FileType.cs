@@ -1,4 +1,4 @@
-namespace Key_Value_Serializer.Models;
+namespace KeyValueSerializer.Models;
 
 internal enum FileType
 {

@@ -2,10 +2,10 @@ using System.Buffers.Text;
 using System.IO.Pipelines;
 using System.Text;
 using CommunityToolkit.Diagnostics;
-using Key_Value_Serializer.Cache;
-using Key_Value_Serializer.Models;
+using KeyValueSerializer.Cache;
+using KeyValueSerializer.Models;
 
-namespace Key_Value_Serializer.Serialization;
+namespace KeyValueSerializer.Serialization;
 
 internal static class Serializer
 {

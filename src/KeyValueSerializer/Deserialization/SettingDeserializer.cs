@@ -1,10 +1,10 @@
 using System.Buffers;
 using System.IO.Pipelines;
 using CommunityToolkit.Diagnostics;
-using Key_Value_Serializer.Cache;
-using Key_Value_Serializer.Models;
+using KeyValueSerializer.Cache;
+using KeyValueSerializer.Models;
 
-namespace Key_Value_Serializer.Deserialization;
+namespace KeyValueSerializer.Deserialization;
 
 // https://learn.microsoft.com/en-us/dotnet/standard/io/pipelines
 internal static class SettingDeserializer

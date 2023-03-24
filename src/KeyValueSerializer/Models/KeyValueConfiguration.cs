@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace Key_Value_Serializer.Models;
+namespace KeyValueSerializer.Models;
 
 public sealed class KeyValueConfiguration
 {

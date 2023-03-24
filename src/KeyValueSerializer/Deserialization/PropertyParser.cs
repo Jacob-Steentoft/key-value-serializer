@@ -1,10 +1,10 @@
 using System.Buffers.Text;
 using System.Text;
 using CommunityToolkit.Diagnostics;
-using Key_Value_Serializer.Cache;
-using Key_Value_Serializer.Models;
+using KeyValueSerializer.Cache;
+using KeyValueSerializer.Models;
 
-namespace Key_Value_Serializer.Deserialization;
+namespace KeyValueSerializer.Deserialization;
 
 internal static class PropertyParser
 {

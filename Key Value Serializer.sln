@@ -4,9 +4,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D2F4AC61-35E
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8D89B62F-D900-4745-9203-025274B20475}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Key Value Serializer", "src\Key Value Serializer\Key Value Serializer.csproj", "{F9C0F54F-59BE-4430-BC66-3864CD4EECCC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValueSerializer", "src\KeyValueSerializer\KeyValueSerializer.csproj", "{F9C0F54F-59BE-4430-BC66-3864CD4EECCC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializerTest", "test\SerializerTest\SerializerTest.csproj", "{CB14B4FA-8554-4571-9957-B6BB197DA3C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValueSerializer.Tests.Unit", "test\KeyValueSerializer.Tests.Unit\KeyValueSerializer.Tests.Unit.csproj", "{CB14B4FA-8554-4571-9957-B6BB197DA3C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,9 +1,9 @@
-using Key_Value_Serializer.Cache;
-using Key_Value_Serializer.Deserialization;
-using Key_Value_Serializer.Models;
-using Key_Value_Serializer.Serialization;
+using KeyValueSerializer.Cache;
+using KeyValueSerializer.Deserialization;
+using KeyValueSerializer.Models;
+using KeyValueSerializer.Serialization;
 
-namespace Key_Value_Serializer;
+namespace KeyValueSerializer;
 
 public static class KeyValueSerializer
 {

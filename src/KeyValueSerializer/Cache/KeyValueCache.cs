@@ -3,9 +3,9 @@ using System.Text;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance.Helpers;
 using Fasterflect;
-using Key_Value_Serializer.Models;
+using KeyValueSerializer.Models;
 
-namespace Key_Value_Serializer.Cache;
+namespace KeyValueSerializer.Cache;
 
 internal sealed class KeyValueCache
 {
