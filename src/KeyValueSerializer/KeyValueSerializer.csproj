@@ -4,6 +4,8 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Authors>Jacob Steentoft</Authors>
+        <Company>steentoft.net</Company>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,6 +17,7 @@
     
     <ItemGroup>
         <InternalsVisibleTo Include="KeyValueSerializer.Tests.Unit" />
+        <InternalsVisibleTo Include="KeyValueSerializer.Benchmarks" />
     </ItemGroup>
 
 </Project>

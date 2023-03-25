@@ -35,14 +35,15 @@ internal sealed class KeyValueCache
             var propertyName = attribute is null ? property.Name : attribute.Name;
             var propertyBytes = Encoding.UTF8.GetBytes(propertyName);
 
-            var nonArrayType = propertyType.IsArray
+            var baseType = propertyType.IsArray
                 ? GetFileType(propertyType.GetElementType())
                 : GetFileType(propertyType);
 
+            // TODO: Ensure propertyName uniqueness
             var settingProperty = new KeyValueProperty
             {
                 KeyName = propertyBytes,
-                FileType = nonArrayType,
+                FileType = baseType,
                 IsArray = propertyType.IsArray,
                 SetValue = property.DelegateForSetPropertyValue(),
                 GetValue = property.DelegateForGetPropertyValue()
@@ -69,6 +70,7 @@ internal sealed class KeyValueCache
         _ when type == typeof(DateTime) => FileType.DateTime,
         _ when type == typeof(DateTimeOffset) => FileType.DateTimeOffset,
         _ when type == typeof(TimeSpan) => FileType.TimeSpan,
+        _ when type == typeof(Guid) => FileType.Guid,
         _ when type == typeof(bool) => FileType.Boolean,
         _ when type == typeof(sbyte) => FileType.Int8,
         _ when type == typeof(byte) => FileType.UInt8,
@@ -81,6 +83,6 @@ internal sealed class KeyValueCache
         _ when type == typeof(float) => FileType.Float32,
         _ when type == typeof(double) => FileType.Float64,
         _ when type == typeof(decimal) => FileType.Float128,
-        _ => ThrowHelper.ThrowArgumentOutOfRangeException<FileType>(nameof(type), type, "Type has not been implemented")
+        _ => ThrowHelper.ThrowArgumentOutOfRangeException<FileType>(nameof(type), type, "Type has not been implemented in cache")
     };
 }

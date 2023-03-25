@@ -16,7 +16,7 @@ public static class KeyValueSerializer
 
         var serializerConfiguration = config ?? SerializerOptions;
 
-        Serializer.Serialize(stream, inputObject, cache, serializerConfiguration);
+        Serializer.Serialize(inputObject, stream, cache, serializerConfiguration);
     }
 
     public static async ValueTask<T> DeserializeAsync<T>(Stream stream, KeyValueConfiguration? config = null,
@@ -26,7 +26,7 @@ public static class KeyValueSerializer
 
         var serializerConfiguration = config ?? SerializerOptions;
 
-        return await SettingDeserializer.DeserializeStreamAsync<T>(stream, cache, serializerConfiguration,
+        return await Deserializer.DeserializeStreamAsync<T>(stream, cache, serializerConfiguration,
             cancellationToken);
     }
 

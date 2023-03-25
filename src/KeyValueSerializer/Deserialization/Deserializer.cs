@@ -2,12 +2,11 @@ using System.Buffers;
 using System.IO.Pipelines;
 using CommunityToolkit.Diagnostics;
 using KeyValueSerializer.Cache;
-using KeyValueSerializer.Models;
 
 namespace KeyValueSerializer.Deserialization;
 
 // https://learn.microsoft.com/en-us/dotnet/standard/io/pipelines
-internal static class SettingDeserializer
+internal static class Deserializer
 {
     public static async ValueTask<T> DeserializeStreamAsync<T>(Stream stream, KeyValueCache cache,
         KeyValueConfiguration config, CancellationToken cancellationToken)
@@ -85,7 +84,7 @@ internal static class SettingDeserializer
             }
 
             // Set the object property value
-            if (!TryAssignProperty(buildObject, (KeyValueProperty)property, config, ref reader))
+            if (!TryAssignProperty(buildObject, property, config, ref reader))
             {
                 break;
             }
@@ -129,7 +128,7 @@ internal static class SettingDeserializer
 
         var trimmedValue = valueBytes.TrimEnd(options.WhiteSpaces);
 
-        PropertyParser.SetProperty(buildObject, property, trimmedValue, options);
+        ValueParser.SetProperty(buildObject, property, trimmedValue);
         return true;
     }
 
@@ -144,7 +143,7 @@ internal static class SettingDeserializer
             return false;
         }
 
-        PropertyParser.SetProperty(buildObject, property, stringBytes, options);
+        ValueParser.SetProperty(buildObject, property, stringBytes);
         return true;
     }
 
@@ -159,7 +158,7 @@ internal static class SettingDeserializer
 
         var remainingArray = reader.UnreadSpan.Slice(0, arrayEndIndex);
 
-        PropertyParser.SetArrayProperty(buildObject, property, remainingArray, options, arraySize);
+        ValueParser.SetArrayProperty(buildObject, property, remainingArray, options, arraySize);
         reader.Advance(arrayEndIndex + 1);
         return true;
     }

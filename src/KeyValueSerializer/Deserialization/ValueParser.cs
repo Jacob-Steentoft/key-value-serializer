@@ -1,15 +1,16 @@
+using System.Buffers;
 using System.Buffers.Text;
 using System.Text;
 using CommunityToolkit.Diagnostics;
+using CommunityToolkit.HighPerformance.Buffers;
 using KeyValueSerializer.Cache;
 using KeyValueSerializer.Models;
 
 namespace KeyValueSerializer.Deserialization;
 
-internal static class PropertyParser
+internal static class ValueParser
 {
-    public static void SetProperty(object buildObject, KeyValueProperty property, scoped ReadOnlySpan<byte> propertyValue,
-        KeyValueConfiguration options)
+    public static void SetProperty(object buildObject, KeyValueProperty property, scoped ReadOnlySpan<byte> propertyValue)
     {
         var objectValue = ParseFileProperty(propertyValue, property.FileType);
         property.SetValue(buildObject, objectValue);
@@ -117,17 +118,18 @@ internal static class PropertyParser
     private static void SetArray<T>(object buildObject, KeyValueProperty property,
         scoped ReadOnlySpan<byte> arrayBytes, KeyValueConfiguration options, int arraySize)
     {
-        var objectValues = new T[arraySize];
-        
-        for (var index = 0; index < objectValues.Length; index++)
+        var rentedArray = ArrayPool<T>.Shared.Rent(arraySize);
+
+        for (var index = 0; index < arraySize; index++)
         {
             var itemBytes = GetArrayItem(arrayBytes, options, out var nextIndex);
-            objectValues[index] = (T)ParseFileProperty(itemBytes, property.FileType);
+            rentedArray[index] = (T)ParseFileProperty(itemBytes, property.FileType);
 
             arrayBytes = arrayBytes.Slice(nextIndex);
         }
 
-        property.SetValue(buildObject, objectValues);
+        property.SetValue(buildObject, rentedArray);
+        ArrayPool<T>.Shared.Return(rentedArray);
     }
 
     private static ReadOnlySpan<byte> GetArrayItem(ReadOnlySpan<byte> buffer, KeyValueConfiguration options, out int nextIndex)
@@ -182,7 +184,7 @@ internal static class PropertyParser
         {
             case FileType.String:
             {
-                return propertyValue.Length == 0 ? string.Empty : Encoding.UTF8.GetString(propertyValue);
+                return StringPool.Shared.GetOrAdd(propertyValue, Encoding.UTF8);
             }
             case FileType.Boolean:
             {
@@ -195,7 +197,7 @@ internal static class PropertyParser
             }
             case FileType.DateTime:
             {
-                if (!Utf8Parser.TryParse(propertyValue, out DateTime value, out _, 'R'))
+                if (!Utf8Parser.TryParse(propertyValue, out DateTime value, out _, 'O'))
                 {
                     ThrowHelper.ThrowFormatException("Unable to parse DateTime type");
                 }
@@ -204,7 +206,7 @@ internal static class PropertyParser
             }
             case FileType.DateTimeOffset:
             {
-                if (!Utf8Parser.TryParse(propertyValue, out bool value, out _, 'R'))
+                if (!Utf8Parser.TryParse(propertyValue, out DateTimeOffset value, out _, 'O'))
                 {
                     ThrowHelper.ThrowFormatException("Unable to parse DateTimeOffset type");
                 }
@@ -305,7 +307,7 @@ internal static class PropertyParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out float value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to float long type");
+                    ThrowHelper.ThrowFormatException("Unable to parse float type");
                 }
 
                 return value;
@@ -314,7 +316,7 @@ internal static class PropertyParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out double value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to float double type");
+                    ThrowHelper.ThrowFormatException("Unable to parse double type");
                 }
 
                 return value;
@@ -323,14 +325,14 @@ internal static class PropertyParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out decimal value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to float decimal type");
+                    ThrowHelper.ThrowFormatException("Unable to parse decimal type");
                 }
 
                 return value;
             }
             default:
             {
-                return ThrowHelper.ThrowArgumentOutOfRangeException<object>(nameof(fileType), fileType, "File Type missing implementation");
+                return ThrowHelper.ThrowArgumentOutOfRangeException<object>(nameof(fileType), fileType, "File Type missing implementation for file parser");
             }
         }
     }

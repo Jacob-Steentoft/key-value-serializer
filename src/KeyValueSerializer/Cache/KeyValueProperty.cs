@@ -3,7 +3,7 @@ using KeyValueSerializer.Models;
 
 namespace KeyValueSerializer.Cache;
 
-internal readonly struct KeyValueProperty
+internal sealed class KeyValueProperty
 {
 	public required byte[] KeyName { get; init; }
     public required bool IsArray { get; init; }

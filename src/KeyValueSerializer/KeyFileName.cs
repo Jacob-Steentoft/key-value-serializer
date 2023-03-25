@@ -1,4 +1,4 @@
-namespace KeyValueSerializer.Models;
+namespace KeyValueSerializer;
 
 [AttributeUsage(AttributeTargets.Property)]
 public sealed class KeyFileName : Attribute
