@@ -122,7 +122,6 @@ internal static class ValueParser
 
         for (var index = 0; index < arraySize; index++)
         {
-            Console.WriteLine(Encoding.UTF8.GetString(arrayBytes));
             var itemBytes = GetArrayItem(arrayBytes, options, out var nextIndex);
             rentedArray[index] = (T)ParseFileProperty(itemBytes, property.FileType);
 
@@ -144,7 +143,7 @@ internal static class ValueParser
             {
                 // Skip string start character
                 startIndex = index + 1;
-                
+
                 // Get the last index of a string separator that should not be skipped
                 var stringSeparatorIndex = index;
                 do
@@ -159,7 +158,7 @@ internal static class ValueParser
 
                     stringSeparatorIndex += newIndex;
                 } while (buffer[stringSeparatorIndex - 1] == options.StringIgnoreCharacter);
-                
+
                 nextIndex = stringSeparatorIndex + 1;
                 return buffer.Slice(startIndex, stringSeparatorIndex - startIndex);
             }

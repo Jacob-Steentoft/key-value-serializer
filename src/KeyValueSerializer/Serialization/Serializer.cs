@@ -72,7 +72,7 @@ internal static class Serializer
 
         for (var index = 0; index < propertyValues.Length; index++)
         {
-            pipeWriter.WritePropertyValueAndAdvance(propertyValues.GetValue(index), options, fileType);
+            pipeWriter.WritePropertyValueAndAdvance(propertyValues.GetValue(index)!, options, fileType);
             
             if (index != propertyValues.Length - 1)
             {
