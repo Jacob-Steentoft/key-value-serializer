@@ -18,9 +18,9 @@ internal static class Serializer
         keyValueSeparator[0] = options.Space;
         keyValueSeparator[1] = options.ValueStart;
         keyValueSeparator[2] = options.Space;
-
+        
         Span<byte> newKeyValuePair = stackalloc byte[1 + options.NewLine.Length];
-        keyValueSeparator[0] = options.ValueEnd;
+        newKeyValuePair[0] = options.ValueEnd;
         options.NewLine.CopyTo(newKeyValuePair.Slice(1));
 
         foreach (var property in cache.Properties)
@@ -63,17 +63,21 @@ internal static class Serializer
     private static void WritePropertyArrayValueAndAdvance(this PipeWriter pipeWriter, object propertyValue,
         KeyValueConfiguration options, FileType fileType)
     {
-        var propertyValues = (object[])propertyValue;
-
+        var propertyValues = (Array)propertyValue;
+        Span<byte> span = stackalloc byte[2];
+        span[0] = options.ArraySeparator;
+        span[1] = options.Space;
+        
         pipeWriter.WriteAndAdvance(options.ArrayStart);
 
         for (var index = 0; index < propertyValues.Length; index++)
         {
-            pipeWriter.WritePropertyValueAndAdvance(propertyValues[index], options, fileType);
+            pipeWriter.WritePropertyValueAndAdvance(propertyValues.GetValue(index), options, fileType);
             
             if (index != propertyValues.Length - 1)
             {
-                pipeWriter.WriteAndAdvance(options.ArraySeparator);
+                pipeWriter.WriteAndAdvance(span);
+                
             }
         }
 

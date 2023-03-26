@@ -4,7 +4,7 @@
 
 namespace KeyValueSerializer.Tests.Unit.Models;
 
-public class ArmaServerOptions
+public class TestSerial
 {
 	[KeyFileName("string")]
 	public string? String { get; set; }

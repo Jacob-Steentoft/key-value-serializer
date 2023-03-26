@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Buffers.Text;
 using System.IO.Pipelines;
 using System.Text;
@@ -9,20 +10,24 @@ namespace KeyValueSerializer.Serialization;
 internal static class ValueFormatter
 {
     public static void WritePropertyValueAndAdvance(this PipeWriter pipeWriter, object propertyValue,
-        KeyValueConfiguration options, FileType fileType)
+        KeyValueConfiguration config, FileType fileType)
     {
         switch (fileType)
         {
             case FileType.String:
             {
                 var stringValue = (string)propertyValue;
-                var stringByteCount = Encoding.UTF8.GetByteCount(stringValue);
-                var buffer = pipeWriter.GetSpan(stringByteCount + 2);
-                Encoding.UTF8.GetBytes(stringValue, buffer.Slice(1, stringByteCount));
-                buffer[0] = options.StringSeparator;
-                buffer[buffer.Length - 1] = options.StringSeparator;
 
-                pipeWriter.Advance(stringByteCount);
+                var stringByteCount = Encoding.UTF8.GetByteCount(stringValue);
+                var stringContentLength = stringByteCount + 2;
+
+                var buffer = pipeWriter.GetSpan(stringContentLength);
+
+                Encoding.UTF8.GetBytes(stringValue, buffer.Slice(1, stringByteCount));
+                buffer[0] = config.StringSeparator;
+                buffer[stringContentLength - 1] = config.StringSeparator;
+
+                pipeWriter.Advance(stringContentLength);
                 return;
             }
             case FileType.Boolean:
@@ -39,17 +44,41 @@ internal static class ValueFormatter
             }
             case FileType.DateTime:
             {
-                ThrowHelper.ThrowFormatException();
+                // TODO: Look into proper size
+                const int maxByteSize = 100;
+                var buffer = pipeWriter.GetSpan(maxByteSize);
+                if (!Utf8Formatter.TryFormat((DateTime)propertyValue, buffer, out var bytesWritten))
+                {
+                    ThrowHelper.ThrowFormatException();
+                }
+
+                pipeWriter.Advance(bytesWritten);
                 return;
             }
             case FileType.DateTimeOffset:
             {
-                ThrowHelper.ThrowFormatException();
+                // TODO: Look into proper size
+                const int maxByteSize = 100;
+                var buffer = pipeWriter.GetSpan(maxByteSize);
+                if (!Utf8Formatter.TryFormat((DateTimeOffset)propertyValue, buffer, out var bytesWritten))
+                {
+                    ThrowHelper.ThrowFormatException();
+                }
+
+                pipeWriter.Advance(bytesWritten);
                 return;
             }
             case FileType.TimeSpan:
             {
-                ThrowHelper.ThrowFormatException();
+                // TODO: Look into proper size
+                const int maxByteSize = 100;
+                var buffer = pipeWriter.GetSpan(maxByteSize);
+                if (!Utf8Formatter.TryFormat((TimeSpan)propertyValue, buffer, out var bytesWritten))
+                {
+                    ThrowHelper.ThrowFormatException();
+                }
+
+                pipeWriter.Advance(bytesWritten);
                 return;
             }
             case FileType.Guid:
@@ -57,7 +86,7 @@ internal static class ValueFormatter
                 // Found no constant to reference for standard GUID string length
                 const int maxByteSize = 36;
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((DateTime)propertyValue, buffer, out var bytesWritten))
+                if (!Utf8Formatter.TryFormat((Guid)propertyValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -177,7 +206,7 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(double);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((double)propertyValue, buffer, out var bytesWritten))
+                if (!Utf8Formatter.TryFormat((double)propertyValue, buffer, out var bytesWritten,new StandardFormat('G')))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -199,7 +228,8 @@ internal static class ValueFormatter
             }
             default:
             {
-                ThrowHelper.ThrowArgumentOutOfRangeException(nameof(fileType), fileType, "File Type missing implementation");
+                ThrowHelper.ThrowArgumentOutOfRangeException(nameof(fileType), fileType,
+                    "File Type missing implementation");
                 return;
             }
         }

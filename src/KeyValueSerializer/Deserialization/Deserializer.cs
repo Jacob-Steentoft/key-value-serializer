@@ -5,7 +5,6 @@ using KeyValueSerializer.Cache;
 
 namespace KeyValueSerializer.Deserialization;
 
-// https://learn.microsoft.com/en-us/dotnet/standard/io/pipelines
 internal static class Deserializer
 {
     public static async ValueTask<T> DeserializeStreamAsync<T>(Stream stream, KeyValueCache cache,
@@ -167,7 +166,7 @@ internal static class Deserializer
         out int arraySize)
     {
         arraySize = 1;
-        var length = -1;
+        const int invalidLength = -1;
         for (var index = 0; index < buffer.Length; index++)
         {
             var bufferByte = buffer[index];
@@ -180,7 +179,7 @@ internal static class Deserializer
                     stringIndex = buffer.Slice(stringIndex + 1).IndexOf(options.StringSeparator);
                     if (stringIndex == -1)
                     {
-                        return length;
+                        return invalidLength;
                     }
                 } while (buffer[stringIndex - 1] == options.StringIgnoreCharacter);
 
@@ -194,15 +193,12 @@ internal static class Deserializer
                 continue;
             }
 
-            if (bufferByte != options.ArrayEnd)
+            if (bufferByte == options.ArrayEnd)
             {
-                continue;
+                return index + 1;
             }
-
-            length = index;
-            break;
         }
 
-        return length;
+        return invalidLength;
     }
 }

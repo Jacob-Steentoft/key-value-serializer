@@ -10,7 +10,8 @@ namespace KeyValueSerializer.Deserialization;
 
 internal static class ValueParser
 {
-    public static void SetProperty(object buildObject, KeyValueProperty property, scoped ReadOnlySpan<byte> propertyValue)
+    public static void SetProperty(object buildObject, KeyValueProperty property,
+        scoped ReadOnlySpan<byte> propertyValue)
     {
         var objectValue = ParseFileProperty(propertyValue, property.FileType);
         property.SetValue(buildObject, objectValue);
@@ -112,16 +113,16 @@ internal static class ValueParser
                 break;
             }
         }
-        
     }
 
     private static void SetArray<T>(object buildObject, KeyValueProperty property,
         scoped ReadOnlySpan<byte> arrayBytes, KeyValueConfiguration options, int arraySize)
     {
-        var rentedArray = ArrayPool<T>.Shared.Rent(arraySize);
+        var rentedArray = new T[arraySize];
 
         for (var index = 0; index < arraySize; index++)
         {
+            Console.WriteLine(Encoding.UTF8.GetString(arrayBytes));
             var itemBytes = GetArrayItem(arrayBytes, options, out var nextIndex);
             rentedArray[index] = (T)ParseFileProperty(itemBytes, property.FileType);
 
@@ -129,10 +130,10 @@ internal static class ValueParser
         }
 
         property.SetValue(buildObject, rentedArray);
-        ArrayPool<T>.Shared.Return(rentedArray);
     }
 
-    private static ReadOnlySpan<byte> GetArrayItem(ReadOnlySpan<byte> buffer, KeyValueConfiguration options, out int nextIndex)
+    private static ReadOnlySpan<byte> GetArrayItem(ReadOnlySpan<byte> buffer, KeyValueConfiguration options,
+        out int nextIndex)
     {
         var startIndex = -1;
         for (var index = 0; index < buffer.Length; index++)
@@ -141,24 +142,30 @@ internal static class ValueParser
 
             if (bufferByte == options.StringSeparator)
             {
-                startIndex = index;
+                // Skip string start character
+                startIndex = index + 1;
+                
+                // Get the last index of a string separator that should not be skipped
                 var stringSeparatorIndex = index;
                 do
                 {
-                    stringSeparatorIndex = buffer.Slice(stringSeparatorIndex + 1).IndexOf(options.StringSeparator);
-                    if (stringSeparatorIndex < 0)
+                    stringSeparatorIndex++;
+                    var newIndex = buffer.Slice(stringSeparatorIndex).IndexOf(options.StringSeparator);
+                    if (newIndex < 0)
                     {
                         nextIndex = -1;
                         return ReadOnlySpan<byte>.Empty;
                     }
-                } while (buffer[stringSeparatorIndex - 1] == options.StringIgnoreCharacter);
 
-                nextIndex = startIndex + 1 + stringSeparatorIndex + 1;
-                return buffer.Slice(startIndex + 1, stringSeparatorIndex - startIndex + 1);
+                    stringSeparatorIndex += newIndex;
+                } while (buffer[stringSeparatorIndex - 1] == options.StringIgnoreCharacter);
+                
+                nextIndex = stringSeparatorIndex + 1;
+                return buffer.Slice(startIndex, stringSeparatorIndex - startIndex);
             }
 
-            if (bufferByte != options.ArrayStart ||
-                bufferByte != options.ArraySeparator ||
+            if (bufferByte != options.ArrayStart &&
+                bufferByte != options.ArraySeparator &&
                 bufferByte != options.ArrayEnd)
             {
                 continue;
@@ -171,7 +178,7 @@ internal static class ValueParser
             }
 
             nextIndex = index - startIndex;
-            return buffer.Slice(startIndex + 1, index - startIndex - 1);
+            return buffer.Slice(startIndex + 1, index - startIndex - 1).TrimStart(options.WhiteSpaces);
         }
 
         nextIndex = -1;
@@ -332,7 +339,8 @@ internal static class ValueParser
             }
             default:
             {
-                return ThrowHelper.ThrowArgumentOutOfRangeException<object>(nameof(fileType), fileType, "File Type missing implementation for file parser");
+                return ThrowHelper.ThrowArgumentOutOfRangeException<object>(nameof(fileType), fileType,
+                    "File Type missing implementation for file parser");
             }
         }
     }

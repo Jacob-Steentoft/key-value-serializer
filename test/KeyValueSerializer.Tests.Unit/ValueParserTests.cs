@@ -10,12 +10,12 @@ namespace KeyValueSerializer.Tests.Unit;
 public class ValueParserTests
 {
     private readonly KeyValueCache _cache;
-    private readonly ArmaServerOptions _options;
+    private readonly TestSerial _options;
 
     public ValueParserTests()
     {
-        _cache = new KeyValueCache(typeof(ArmaServerOptions));
-        _options = new ArmaServerOptions();
+        _cache = new KeyValueCache(typeof(TestSerial));
+        _options = new TestSerial();
     }
 
     // String testing
