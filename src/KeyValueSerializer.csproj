@@ -5,7 +5,12 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Authors>Jacob Steentoft</Authors>
-        <Company>steentoft.net</Company>
+        <Company></Company>
+        <Title>Key Value Serializer</Title>
+        <Description>A performance focused .NET Library for serializing key value files</Description>
+        <PackageProjectUrl>https://github.com/Jacob-Steentoft/Key-Value-Serializer</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/Jacob-Steentoft/Key-Value-Serializer/blob/master/LICENSE</PackageLicenseUrl>
+        <RepositoryUrl>https://github.com/Jacob-Steentoft/Key-Value-Serializer</RepositoryUrl>
     </PropertyGroup>
 
     <ItemGroup>

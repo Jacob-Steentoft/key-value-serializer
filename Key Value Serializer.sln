@@ -4,13 +4,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D2F4AC61-35E
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8D89B62F-D900-4745-9203-025274B20475}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValueSerializer", "src\KeyValueSerializer\KeyValueSerializer.csproj", "{F9C0F54F-59BE-4430-BC66-3864CD4EECCC}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValueSerializer.Tests.Unit", "test\KeyValueSerializer.Tests.Unit\KeyValueSerializer.Tests.Unit.csproj", "{CB14B4FA-8554-4571-9957-B6BB197DA3C3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{A123092A-9F48-4A0E-AA07-2A7AC030AD14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValueSerializer.Benchmarks", "benchmarks\KeyValueSerializer.Benchmarks\KeyValueSerializer.Benchmarks.csproj", "{F4BBF14C-7F2D-4630-81E4-964F81487BA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValueSerializer", "src\KeyValueSerializer.csproj", "{430F3983-B694-4D25-B197-78A202AC87C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyValueSerializer.Benchmarks", "benchmarks\KeyValueSerializer.Benchmarks.csproj", "{A18E8AE0-F199-41AD-B43D-7670A708C2A7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,22 +18,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F9C0F54F-59BE-4430-BC66-3864CD4EECCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F9C0F54F-59BE-4430-BC66-3864CD4EECCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F9C0F54F-59BE-4430-BC66-3864CD4EECCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F9C0F54F-59BE-4430-BC66-3864CD4EECCC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CB14B4FA-8554-4571-9957-B6BB197DA3C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CB14B4FA-8554-4571-9957-B6BB197DA3C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB14B4FA-8554-4571-9957-B6BB197DA3C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB14B4FA-8554-4571-9957-B6BB197DA3C3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F4BBF14C-7F2D-4630-81E4-964F81487BA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F4BBF14C-7F2D-4630-81E4-964F81487BA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F4BBF14C-7F2D-4630-81E4-964F81487BA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F4BBF14C-7F2D-4630-81E4-964F81487BA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{430F3983-B694-4D25-B197-78A202AC87C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{430F3983-B694-4D25-B197-78A202AC87C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{430F3983-B694-4D25-B197-78A202AC87C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{430F3983-B694-4D25-B197-78A202AC87C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A18E8AE0-F199-41AD-B43D-7670A708C2A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A18E8AE0-F199-41AD-B43D-7670A708C2A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A18E8AE0-F199-41AD-B43D-7670A708C2A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A18E8AE0-F199-41AD-B43D-7670A708C2A7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{F9C0F54F-59BE-4430-BC66-3864CD4EECCC} = {D2F4AC61-35EE-4AC1-93A4-0691F0D3AE9C}
 		{CB14B4FA-8554-4571-9957-B6BB197DA3C3} = {8D89B62F-D900-4745-9203-025274B20475}
-		{F4BBF14C-7F2D-4630-81E4-964F81487BA5} = {A123092A-9F48-4A0E-AA07-2A7AC030AD14}
+		{430F3983-B694-4D25-B197-78A202AC87C0} = {D2F4AC61-35EE-4AC1-93A4-0691F0D3AE9C}
+		{A18E8AE0-F199-41AD-B43D-7670A708C2A7} = {A123092A-9F48-4A0E-AA07-2A7AC030AD14}
 	EndGlobalSection
 EndGlobal

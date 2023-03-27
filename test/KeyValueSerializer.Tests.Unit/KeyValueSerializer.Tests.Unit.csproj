@@ -24,6 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\KeyValueSerializer.csproj" />
       <ProjectReference Include="..\..\src\KeyValueSerializer\KeyValueSerializer.csproj" />
     </ItemGroup>
 
