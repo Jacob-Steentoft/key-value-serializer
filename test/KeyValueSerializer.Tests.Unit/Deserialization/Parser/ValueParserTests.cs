@@ -5,7 +5,7 @@ using KeyValueSerializer.Deserialization;
 using KeyValueSerializer.Tests.Unit.Models;
 using KeyValueSerializer.Tests.Unit.TheoryData;
 
-namespace KeyValueSerializer.Tests.Unit;
+namespace KeyValueSerializer.Tests.Unit.Deserialization.Parser;
 
 public class ValueParserTests
 {
@@ -24,7 +24,6 @@ public class ValueParserTests
     [InlineData("1")]
     [InlineData("")]
     [InlineData("...........")]
-    // ReSharper disable twice StringLiteralTypo
     [InlineData("Rød grød med fløde")]
     [InlineData("""
                                     \"\

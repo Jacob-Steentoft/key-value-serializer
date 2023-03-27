@@ -5,7 +5,7 @@ using FluentAssertions;
 using KeyValueSerializer.Models;
 using KeyValueSerializer.Serialization;
 
-namespace KeyValueSerializer.Tests.Unit.Serialization.ValueFormatter;
+namespace KeyValueSerializer.Tests.Unit.Serialization.Formatter;
 
 public class ValueFormatterCorrectTests
 {

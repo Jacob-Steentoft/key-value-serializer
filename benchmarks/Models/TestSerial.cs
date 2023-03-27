@@ -1,8 +1,4 @@
-﻿
-
-// ReSharper disable StringLiteralTypo
-
-namespace KeyValueSerializer.Tests.Unit.Models;
+﻿namespace KeyValueSerializer.Benchmarks.Models;
 
 public class TestSerial
 {

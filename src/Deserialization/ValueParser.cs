@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Buffers.Text;
 using System.Text;
 using CommunityToolkit.Diagnostics;
@@ -141,26 +140,15 @@ internal static class ValueParser
 
             if (bufferByte == options.StringSeparator)
             {
-                // Skip string start character
-                startIndex = index + 1;
-
-                // Get the last index of a string separator that should not be skipped
-                var stringSeparatorIndex = index;
-                do
+                var stringEndIndex = StringEndIndex(buffer.Slice(index), options);
+                if (stringEndIndex == -1)
                 {
-                    stringSeparatorIndex++;
-                    var newIndex = buffer.Slice(stringSeparatorIndex).IndexOf(options.StringSeparator);
-                    if (newIndex < 0)
-                    {
-                        nextIndex = -1;
-                        return ReadOnlySpan<byte>.Empty;
-                    }
+                    nextIndex = -1;
+                    return ReadOnlySpan<byte>.Empty;
+                }
 
-                    stringSeparatorIndex += newIndex;
-                } while (buffer[stringSeparatorIndex - 1] == options.StringIgnoreCharacter);
-
-                nextIndex = stringSeparatorIndex + 1;
-                return buffer.Slice(startIndex, stringSeparatorIndex - startIndex);
+                nextIndex = index + stringEndIndex + 1;
+                return buffer.Slice(index + 1, stringEndIndex - 1);
             }
 
             if (bufferByte != options.ArrayStart &&
@@ -184,6 +172,24 @@ internal static class ValueParser
         return ReadOnlySpan<byte>.Empty;
     }
 
+    public static int StringEndIndex(scoped ReadOnlySpan<byte> buffer, KeyValueConfiguration options)
+    {
+        var stringSeparatorIndex = 0;
+        do
+        {
+            stringSeparatorIndex++;
+            var newIndex = buffer.Slice(stringSeparatorIndex).IndexOf(options.StringSeparator);
+            if (newIndex < 0)
+            {
+                return -1;
+            }
+
+            stringSeparatorIndex += newIndex;
+        } while (buffer[stringSeparatorIndex - 1] == options.StringIgnoreCharacter);
+
+        return stringSeparatorIndex;
+    }
+
     private static object ParseFileProperty(scoped ReadOnlySpan<byte> propertyValue, FileType fileType)
     {
         switch (fileType)
@@ -196,7 +202,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out bool value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse boolean type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse bool type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -205,7 +211,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out DateTime value, out _, 'O'))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse DateTime type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse DateTime type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -214,7 +220,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out DateTimeOffset value, out _, 'O'))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse DateTimeOffset type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse DateTimeOffset type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -223,7 +229,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out TimeSpan value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse TimeSpan type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse TimeSpan type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -232,7 +238,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out Guid value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse Guid type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse Guid type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -241,7 +247,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out sbyte value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse sbyte type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse sbyte type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -250,7 +256,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out byte value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse byte type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse byte type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -259,7 +265,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out short value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse short type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse short type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -268,7 +274,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out ushort value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse short type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse short type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -277,7 +283,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out int value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse int type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse int type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -286,7 +292,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out uint value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse uint type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse uint type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -295,7 +301,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out long value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse long type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse long type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -304,7 +310,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out ulong value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse ulong type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse ulong type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -313,7 +319,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out float value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse float type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse float type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -322,7 +328,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out double value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse double type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse double type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;
@@ -331,7 +337,7 @@ internal static class ValueParser
             {
                 if (!Utf8Parser.TryParse(propertyValue, out decimal value, out _))
                 {
-                    ThrowHelper.ThrowFormatException("Unable to parse decimal type");
+                    ThrowHelper.ThrowFormatException($"Unable to parse decimal type: '{Encoding.UTF8.GetString(propertyValue)}'");
                 }
 
                 return value;

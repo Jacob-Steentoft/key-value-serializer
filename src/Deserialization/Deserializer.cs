@@ -134,7 +134,6 @@ internal static class Deserializer
     private static bool TryAssignString(object buildObject, KeyValueProperty property, KeyValueConfiguration options,
         ref SequenceReader<byte> reader)
     {
-        // Advance and rewind to prevent ending the read after the first character
         reader.Advance(1);
         if (!reader.TryReadTo(out ReadOnlySpan<byte> stringBytes, options.StringSeparator, options.StringIgnoreCharacter))
         {
@@ -173,17 +172,14 @@ internal static class Deserializer
 
             if (bufferByte == options.StringSeparator)
             {
-                var stringIndex = index;
-                do
-                {
-                    stringIndex = buffer.Slice(stringIndex + 1).IndexOf(options.StringSeparator);
-                    if (stringIndex == -1)
-                    {
-                        return invalidLength;
-                    }
-                } while (buffer[stringIndex - 1] == options.StringIgnoreCharacter);
+                var endStringIndex = ValueParser.StringEndIndex(buffer.Slice(index), options);
 
-                index += stringIndex + 1;
+                if (endStringIndex == invalidLength)
+                {
+                    return invalidLength;
+                }
+
+                index += endStringIndex;
                 continue;
             }
 
