@@ -2,7 +2,6 @@ using BenchmarkDotNet.Attributes;
 using KeyValueSerializer.Benchmarks.Models;
 using KeyValueSerializer.Cache;
 using KeyValueSerializer.Deserialization;
-using KeyValueSerializer.Models;
 using KeyValueSerializer.Serialization;
 
 namespace KeyValueSerializer.Benchmarks.Benchmarks;

@@ -9,7 +9,7 @@ namespace KeyValueSerializer.Tests.Unit.Deserialization;
 public class DeserializerTests
 {
     [Fact]
-    public async Task DeserializeStreamAsync_GivenValidInput_ReturnsCorrectObject()
+    public async Task DeserializeStreamAsync_ShouldDeserializeObject_WhenGivenKeyValueStream()
     {
         // Arrange
         var config = new KeyValueConfiguration();
@@ -19,10 +19,11 @@ public class DeserializerTests
         var arrayStart = (char)config.ArrayStart;
         var arraySeparator = Encoding.UTF8.GetString(new[] { config.ArraySeparator, config.Space });
         var arrayEnd = (char)config.ArrayEnd;
+        var stringEscape = Encoding.UTF8.GetString(new[] { config.StringIgnoreCharacter, config.StringSeparator });
 
         var input =
             $"string{keyValueSeparator}{stringSeparator}TestString{stringSeparator}{newLine}" +
-            $"strings{keyValueSeparator}{arrayStart}{stringSeparator}One{stringSeparator}{arraySeparator}{stringSeparator}Two{stringSeparator}{arraySeparator}{stringSeparator}Three{stringSeparator}{arrayEnd}{newLine}" +
+            $"strings{keyValueSeparator}{arrayStart}{stringSeparator}One{stringSeparator}{arraySeparator}{stringSeparator}Two{stringSeparator}{arraySeparator}{stringSeparator}Th{stringEscape}ree{stringSeparator}{arrayEnd}{newLine}" +
             $"bool{keyValueSeparator}True{newLine}" +
             $"bools{keyValueSeparator}{arrayStart}True{arraySeparator}False{arraySeparator}True{arrayEnd}{newLine}" +
             $"dateTime{keyValueSeparator}2023-01-01T00:00:00.0000000{newLine}" +
@@ -68,7 +69,7 @@ public class DeserializerTests
 
         // Assert
         result.String.Should().Be("TestString");
-        result.Strings.Should().Equal("One", "Two", "Three");
+        result.Strings.Should().Equal("One", "Two", $"Th{stringEscape}ree");
         result.Bool.Should().BeTrue();
         result.Bools.Should().Equal(true, false, true);
         result.DateTime.Should().Be(new DateTime(2023, 1, 1));
@@ -80,17 +81,17 @@ public class DeserializerTests
         result.DateTimeOffsets.Should().Equal(
             new DateTimeOffset(new DateTime(2023, 1, 4), TimeSpan.Zero),
             new DateTimeOffset(new DateTime(2023, 1, 5), TimeSpan.Zero)
-            );
+        );
         result.TimeSpan.Should().Be(TimeSpan.FromHours(1));
         result.TimeSpans.Should().Equal(
-            TimeSpan.FromHours(2), 
+            TimeSpan.FromHours(2),
             TimeSpan.FromHours(3)
-            );
+        );
         result.Guid.Should().Be(Guid.Parse("12345678-abcd-1234-abcd-1234567890ab"));
         result.Guids.Should().Equal(
             Guid.Parse("22345678-abcd-1234-abcd-1234567890ab"),
             Guid.Parse("32345678-abcd-1234-abcd-1234567890ab")
-            );
+        );
         result.Sbyte.Should().Be(1);
         result.Sbytes.Should().Equal(2, 3, 4);
         result.Byte.Should().Be(5);

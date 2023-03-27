@@ -9,17 +9,17 @@ namespace KeyValueSerializer.Tests.Unit.Serialization;
 public class SerializerTests
 {
     [Fact]
-    public void Serialize_ServerOptions_CorrectOutput()
+    public void Serialize_ShouldSerializeString_WhenGivenObject()
     {
         // Arrange
         var testSerial = new TestSerial
         {
             String = "TestString",
-            Strings = new[] { "One", "Two", "Three" },
+            Strings = new[] { "One", "Two", "Th\\\"ree" },
             Bool = true,
             Bools = new[] { true, false, true },
             DateTime = new DateTime(2023, 1, 1),
-            DateTimes = new []
+            DateTimes = new[]
             {
                 new DateTime(2023, 1, 2),
                 new DateTime(2022, 1, 2),
@@ -48,24 +48,23 @@ public class SerializerTests
             Ushort = 13,
             Ushorts = new ushort[] { 14, 15, 16 },
             Int = 17,
-            Ints = new int[] { 18, 19, 20 },
-            Uint = 21,
-            Units = new uint[] { 22, 23, 24 },
-            Long = 25,
-            Longs = new long[] { 26, 27, 28 },
-            Ulong = 29,
-            Ulongs = new ulong[] { 30, 31, 32 },
+            Ints = new[] { 18, 19, 20 },
+            Uint = 21U,
+            Units = new[] { 22U, 23U, 24U },
+            Long = 25L,
+            Longs = new[] { 26L, 27L, 28L },
+            Ulong = 29UL,
+            Ulongs = new[] { 30UL, 31UL, 32UL },
             Float = 33.3f,
-            Floats = new float[] { 34.4f, 35.5f, 36.6f },
+            Floats = new[] { 34.4f, 35.5f, 36.6f },
             Double = 37.7,
-            Doubles = new double[] { 38.8, 39.9, 40.0 },
+            Doubles = new[] { 38.8, 39.9, 40.0 },
             Decimal = 41.1m,
-            Decimals = new decimal[] { 42.2m, 43.3m, 44.4m }
+            Decimals = new[] { 42.2m, 43.3m, 44.4m }
         };
 
         var config = new KeyValueConfiguration();
-        var cache = new KeyValueCache(typeof(TestSerial)); // Assuming you have a KeyValueCache implementation.
-
+        var cache = new KeyValueCache(typeof(TestSerial));
         using var memoryStream = new MemoryStream();
 
         // Act
@@ -76,13 +75,14 @@ public class SerializerTests
         var keyValueSeparator = Encoding.UTF8.GetString(new[] { config.Space, config.ValueStart, config.Space });
         var stringSeparator = (char)config.StringSeparator;
         var arrayStart = (char)config.ArrayStart;
-        var arraySeparator = Encoding.UTF8.GetString(new[] {config.ArraySeparator, config.Space});
+        var arraySeparator = Encoding.UTF8.GetString(new[] { config.ArraySeparator, config.Space });
         var arrayEnd = (char)config.ArrayEnd;
+        var stringEscape = Encoding.UTF8.GetString(new[] { config.StringIgnoreCharacter, config.StringSeparator });
 
         var result = Encoding.UTF8.GetString(memoryStream.ToArray());
         var expectedOutput =
             $"string{keyValueSeparator}{stringSeparator}TestString{stringSeparator}{newLine}" +
-            $"strings{keyValueSeparator}{arrayStart}{stringSeparator}One{stringSeparator}{arraySeparator}{stringSeparator}Two{stringSeparator}{arraySeparator}{stringSeparator}Three{stringSeparator}{arrayEnd}{newLine}" +
+            $"strings{keyValueSeparator}{arrayStart}{stringSeparator}One{stringSeparator}{arraySeparator}{stringSeparator}Two{stringSeparator}{arraySeparator}{stringSeparator}Th{stringEscape}ree{stringSeparator}{arrayEnd}{newLine}" +
             $"bool{keyValueSeparator}True{newLine}" +
             $"bools{keyValueSeparator}{arrayStart}True{arraySeparator}False{arraySeparator}True{arrayEnd}{newLine}" +
             $"dateTime{keyValueSeparator}2023-01-01T00:00:00.0000000{newLine}" +
