@@ -47,7 +47,7 @@ internal static class ValueFormatter
                 // TODO: Look into proper size
                 const int maxByteSize = 100;
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((DateTime)propertyValue, buffer, out var bytesWritten))
+                if (!Utf8Formatter.TryFormat((DateTime)propertyValue, buffer, out var bytesWritten, new StandardFormat('O')))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -60,7 +60,7 @@ internal static class ValueFormatter
                 // TODO: Look into proper size
                 const int maxByteSize = 100;
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((DateTimeOffset)propertyValue, buffer, out var bytesWritten))
+                if (!Utf8Formatter.TryFormat((DateTimeOffset)propertyValue, buffer, out var bytesWritten, new StandardFormat('O')))
                 {
                     ThrowHelper.ThrowFormatException();
                 }

@@ -22,7 +22,7 @@ public class TestSerial
     public DateTime? DateTime { get; set; }
     
     [KeyFileName("dateTimes")]
-    public DateTime? DateTimes { get; set; }
+    public DateTime[]? DateTimes { get; set; }
     
     [KeyFileName("dateTimeOffset")]
     public DateTimeOffset? DateTimeOffset { get; set; }
