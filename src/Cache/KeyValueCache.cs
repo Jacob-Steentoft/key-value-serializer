@@ -1,9 +1,6 @@
 using System.Reflection;
-using System.Text;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance.Helpers;
-using Fasterflect;
-using KeyValueSerializer.Models;
 
 namespace KeyValueSerializer.Cache;
 
@@ -18,38 +15,17 @@ internal sealed class KeyValueCache
 
         for (var index = 0; index < properties.Length; index++)
         {
-            var property = properties[index];
-            var propertyType = property.PropertyType;
-            if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            var settingProperty = new KeyValueProperty(properties[index]);
+
+            var hash = CalculateHash(settingProperty.KeyName);
+
+            if (_lookupTable.Contains(hash))
             {
-                propertyType = Nullable.GetUnderlyingType(propertyType);
+                ThrowHelper.ThrowInvalidOperationException(
+                    $"{settingProperty.KeyName} already exists in the collection");
             }
 
-            if (propertyType is null)
-            {
-                ThrowHelper.ThrowInvalidOperationException("Property type cannot be null");
-            }
-
-            var attribute = property.GetCustomAttribute(typeof(KeyFileName)) as KeyFileName;
-
-            var propertyName = attribute is null ? property.Name : attribute.Name;
-            var propertyBytes = Encoding.UTF8.GetBytes(propertyName);
-
-            var baseType = propertyType.IsArray
-                ? GetFileType(propertyType.GetElementType())
-                : GetFileType(propertyType);
-
-            // TODO: Ensure propertyName uniqueness
-            var settingProperty = new KeyValueProperty
-            {
-                KeyName = propertyBytes,
-                FileType = baseType,
-                IsArray = propertyType.IsArray,
-                SetValue = property.DelegateForSetPropertyValue(),
-                GetValue = property.DelegateForGetPropertyValue()
-            };
-
-            _lookupTable[index] = HashCode<byte>.Combine(propertyBytes);
+            _lookupTable[index] = hash;
             Properties[index] = settingProperty;
         }
     }
@@ -57,32 +33,19 @@ internal sealed class KeyValueCache
     public readonly KeyValueProperty[] Properties;
     private readonly int[] _lookupTable;
 
-    public KeyValueProperty GetKeyValueProperty(scoped ReadOnlySpan<byte> settingName)
+    public bool TryGetKeyValueProperty(scoped ReadOnlySpan<byte> settingName, out KeyValueProperty? property)
     {
-        var hash = HashCode<byte>.Combine(settingName);
+        var hash = CalculateHash(settingName);
         var index = _lookupTable.AsSpan().IndexOf(hash);
-        return Properties[index];
+        if (index < 0)
+        {
+            property = null;
+            return false;
+        }
+
+        property = Properties[index];
+        return true;
     }
 
-    private static FileType GetFileType(Type? type) => type switch
-    {
-        _ when type == typeof(string) => FileType.String,
-        _ when type == typeof(DateTime) => FileType.DateTime,
-        _ when type == typeof(DateTimeOffset) => FileType.DateTimeOffset,
-        _ when type == typeof(TimeSpan) => FileType.TimeSpan,
-        _ when type == typeof(Guid) => FileType.Guid,
-        _ when type == typeof(bool) => FileType.Boolean,
-        _ when type == typeof(sbyte) => FileType.Int8,
-        _ when type == typeof(byte) => FileType.UInt8,
-        _ when type == typeof(short) => FileType.Int16,
-        _ when type == typeof(ushort) => FileType.UInt16,
-        _ when type == typeof(int) => FileType.Int32,
-        _ when type == typeof(uint) => FileType.UInt32,
-        _ when type == typeof(long) => FileType.Int64,
-        _ when type == typeof(ulong) => FileType.UInt64,
-        _ when type == typeof(float) => FileType.Float32,
-        _ when type == typeof(double) => FileType.Float64,
-        _ when type == typeof(decimal) => FileType.Float128,
-        _ => ThrowHelper.ThrowArgumentOutOfRangeException<FileType>(nameof(type), type, "Type has not been implemented in cache")
-    };
+    private static int CalculateHash(scoped ReadOnlySpan<byte> settingName) => HashCode<byte>.Combine(settingName);
 }

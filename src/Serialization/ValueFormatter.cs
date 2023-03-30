@@ -9,32 +9,34 @@ namespace KeyValueSerializer.Serialization;
 
 internal static class ValueFormatter
 {
-    public static void WritePropertyValueAndAdvance(this PipeWriter pipeWriter, object propertyValue,
+    public static void WritePropertyValueAndAdvance(this PipeWriter pipeWriter, object value,
         KeyValueConfiguration config, FileType fileType)
     {
         switch (fileType)
         {
             case FileType.String:
             {
-                var stringValue = (string)propertyValue;
+                var stringValue = (string)value;
+                const int stringCharCount = 2;
 
-                var stringByteCount = Encoding.UTF8.GetByteCount(stringValue);
-                var stringContentLength = stringByteCount + 2;
+                var maxStringByteCount = Encoding.UTF8.GetMaxByteCount(stringValue.Length) + stringCharCount;
 
-                var buffer = pipeWriter.GetSpan(stringContentLength);
+                var buffer = pipeWriter.GetSpan(maxStringByteCount);
 
-                Encoding.UTF8.GetBytes(stringValue, buffer.Slice(1, stringByteCount));
                 buffer[0] = config.StringSeparator;
-                buffer[stringContentLength - 1] = config.StringSeparator;
+                var stringByteCount = Encoding.UTF8.GetBytes(stringValue, buffer.Slice(1));
+                buffer[stringByteCount + 1] = config.StringSeparator;
 
-                pipeWriter.Advance(stringContentLength);
+                pipeWriter.Advance(stringByteCount + stringCharCount);
                 return;
             }
             case FileType.Boolean:
             {
                 const int maxByteSize = sizeof(bool);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((bool)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (bool)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -44,10 +46,12 @@ internal static class ValueFormatter
             }
             case FileType.DateTime:
             {
-                // TODO: Look into proper size
-                const int maxByteSize = 100;
+                const int maxByteSize = 40;
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((DateTime)propertyValue, buffer, out var bytesWritten, new StandardFormat('O')))
+                var unboxedValue = (DateTime)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten,
+                        new StandardFormat(config.DateTimeFormat)))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -57,10 +61,12 @@ internal static class ValueFormatter
             }
             case FileType.DateTimeOffset:
             {
-                // TODO: Look into proper size
-                const int maxByteSize = 100;
+                const int maxByteSize = 40;
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((DateTimeOffset)propertyValue, buffer, out var bytesWritten, new StandardFormat('O')))
+                var unboxedValue = (DateTimeOffset)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten,
+                        new StandardFormat(config.DateTimeFormat)))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -70,10 +76,11 @@ internal static class ValueFormatter
             }
             case FileType.TimeSpan:
             {
-                // TODO: Look into proper size
-                const int maxByteSize = 100;
+                const int maxByteSize = 40;
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((TimeSpan)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (TimeSpan)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -86,7 +93,9 @@ internal static class ValueFormatter
                 // Found no constant to reference for standard GUID string length
                 const int maxByteSize = 36;
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((Guid)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (Guid)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -98,7 +107,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(sbyte);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((sbyte)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (sbyte)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -110,7 +121,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(byte);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((byte)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (byte)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -122,7 +135,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(short);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((short)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (short)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -134,7 +149,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(ushort);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((ushort)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (ushort)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -146,7 +163,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(int);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((int)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (int)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -158,7 +177,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(uint);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((uint)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (uint)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -170,7 +191,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(long);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((long)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (long)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -182,7 +205,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(ulong);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((ulong)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (ulong)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -194,7 +219,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(float);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((float)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (float)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -206,7 +233,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(double);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((double)propertyValue, buffer, out var bytesWritten,new StandardFormat('G')))
+                var unboxedValue = (double)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten, new StandardFormat('G')))
                 {
                     ThrowHelper.ThrowFormatException();
                 }
@@ -218,7 +247,9 @@ internal static class ValueFormatter
             {
                 const int maxByteSize = sizeof(decimal);
                 var buffer = pipeWriter.GetSpan(maxByteSize);
-                if (!Utf8Formatter.TryFormat((decimal)propertyValue, buffer, out var bytesWritten))
+                var unboxedValue = (decimal)value;
+
+                if (!Utf8Formatter.TryFormat(unboxedValue, buffer, out var bytesWritten))
                 {
                     ThrowHelper.ThrowFormatException();
                 }

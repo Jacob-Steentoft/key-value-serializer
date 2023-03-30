@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Text;
 using CommunityToolkit.Diagnostics;
 using KeyValueSerializer.Cache;
 
@@ -79,11 +80,15 @@ internal static class Deserializer
                 reader.Advance(1);
                 var propertyName = propertySpan.TrimEnd(config.WhiteSpaces);
 
-                property = properties.GetKeyValueProperty(propertyName);
+                if (!properties.TryGetKeyValueProperty(propertyName, out property!))
+                {
+                    ThrowHelper.ThrowInvalidOperationException(
+                        $"The key '{Encoding.UTF8.GetString(propertyName)}' was not found in the type");
+                }
             }
 
             // Set the object property value
-            if (!TryAssignProperty(buildObject, property, config, ref reader))
+            if (!TryAssignProperty(ref reader, buildObject, property, config))
             {
                 break;
             }
@@ -94,8 +99,8 @@ internal static class Deserializer
         return reader.Position;
     }
 
-    private static bool TryAssignProperty(object buildObject, KeyValueProperty property,
-        KeyValueConfiguration config, ref SequenceReader<byte> reader)
+    private static bool TryAssignProperty(ref SequenceReader<byte> reader, object buildObject,
+        KeyValueProperty property, KeyValueConfiguration config)
     {
         reader.AdvancePastAny(config.WhiteSpaces);
 
@@ -106,49 +111,49 @@ internal static class Deserializer
 
         if (byteValue == config.ArrayStart)
         {
-            return TryAssignArray(buildObject, property, config, ref reader);
+            return TryAssignArray(ref reader, buildObject, property, config);
         }
 
         if (byteValue == config.StringSeparator)
         {
-            return TryAssignString(buildObject, property, config, ref reader);
+            return TryAssignString(ref reader, buildObject, property, config);
         }
 
-        return TryAssignValue(buildObject, property, config, ref reader);
+        return TryAssignValue(ref reader, buildObject, property, config);
     }
 
-    private static bool TryAssignValue(object buildObject, KeyValueProperty property, KeyValueConfiguration options,
-        ref SequenceReader<byte> reader)
+    private static bool TryAssignValue(ref SequenceReader<byte> reader, object buildObject, KeyValueProperty property,
+        KeyValueConfiguration config)
     {
-        if (!reader.TryReadTo(out ReadOnlySpan<byte> valueBytes, options.ValueEnd, false))
+        if (!reader.TryReadTo(out ReadOnlySpan<byte> valueBytes, config.ValueEnd, false))
         {
             return false;
         }
 
-        var trimmedValue = valueBytes.TrimEnd(options.WhiteSpaces);
+        var trimmedValue = valueBytes.TrimEnd(config.WhiteSpaces);
 
-        ValueParser.SetProperty(buildObject, property, trimmedValue);
+        ValueParser.SetProperty(buildObject, property, trimmedValue, config);
         return true;
     }
 
-    private static bool TryAssignString(object buildObject, KeyValueProperty property, KeyValueConfiguration options,
-        ref SequenceReader<byte> reader)
+    private static bool TryAssignString(ref SequenceReader<byte> reader, object buildObject, KeyValueProperty property,
+        KeyValueConfiguration config)
     {
         reader.Advance(1);
-        if (!reader.TryReadTo(out ReadOnlySpan<byte> stringBytes, options.StringSeparator, options.StringIgnoreCharacter))
+        if (!reader.TryReadTo(out ReadOnlySpan<byte> stringBytes, config.StringSeparator, config.StringIgnoreCharacter))
         {
             reader.Rewind(1);
             return false;
         }
 
-        ValueParser.SetProperty(buildObject, property, stringBytes);
+        ValueParser.SetProperty(buildObject, property, stringBytes, config);
         return true;
     }
 
-    private static bool TryAssignArray(object buildObject, KeyValueProperty property, KeyValueConfiguration options,
-        ref SequenceReader<byte> reader)
+    private static bool TryAssignArray(ref SequenceReader<byte> reader, object buildObject, KeyValueProperty property,
+        KeyValueConfiguration config)
     {
-        var arrayEndIndex = IndexOfArrayEnd(reader.UnreadSpan, options, out var arraySize);
+        var arrayEndIndex = ValueParser.IndexOfArrayEnd(reader.UnreadSpan, config, out var arraySize);
         if (arrayEndIndex == -1)
         {
             return false;
@@ -156,45 +161,8 @@ internal static class Deserializer
 
         var remainingArray = reader.UnreadSpan.Slice(0, arrayEndIndex);
 
-        ValueParser.SetArrayProperty(buildObject, property, remainingArray, options, arraySize);
+        ValueParser.SetArrayProperty(buildObject, property, remainingArray, config, arraySize);
         reader.Advance(arrayEndIndex + 1);
         return true;
-    }
-
-    private static int IndexOfArrayEnd(scoped ReadOnlySpan<byte> buffer, KeyValueConfiguration options,
-        out int arraySize)
-    {
-        arraySize = 1;
-        const int invalidLength = -1;
-        for (var index = 0; index < buffer.Length; index++)
-        {
-            var bufferByte = buffer[index];
-
-            if (bufferByte == options.StringSeparator)
-            {
-                var endStringIndex = ValueParser.StringEndIndex(buffer.Slice(index), options);
-
-                if (endStringIndex == invalidLength)
-                {
-                    return invalidLength;
-                }
-
-                index += endStringIndex;
-                continue;
-            }
-
-            if (bufferByte == options.ArraySeparator)
-            {
-                arraySize++;
-                continue;
-            }
-
-            if (bufferByte == options.ArrayEnd)
-            {
-                return index + 1;
-            }
-        }
-
-        return invalidLength;
     }
 }
