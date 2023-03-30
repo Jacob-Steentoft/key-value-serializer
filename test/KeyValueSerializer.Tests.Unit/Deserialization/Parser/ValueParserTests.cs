@@ -10,12 +10,14 @@ namespace KeyValueSerializer.Tests.Unit.Deserialization.Parser;
 public class ValueParserTests
 {
     private readonly KeyValueCache _cache;
-    private readonly TestSerial _options;
+    private readonly KeyValueConfiguration _config;
+    private readonly TestSerial _sut;
 
     public ValueParserTests()
     {
         _cache = new KeyValueCache(typeof(TestSerial));
-        _options = new TestSerial();
+        _sut = new TestSerial();
+        _config = new KeyValueConfiguration();
     }
 
     // String testing
@@ -32,14 +34,14 @@ public class ValueParserTests
     {
         // Arrange
         var key = "string"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(inputAndResult);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.String.Should().Be(inputAndResult);
+        _sut.String.Should().Be(inputAndResult);
     }
 
     // Bool testing
@@ -54,14 +56,14 @@ public class ValueParserTests
     {
         // Arrange
         var key = "bool"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Bool.Should().Be(result);
+        _sut.Bool.Should().Be(result);
     }
 
     [Theory]
@@ -75,11 +77,11 @@ public class ValueParserTests
     {
         // Arrange
         var key = "bool"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
@@ -88,91 +90,89 @@ public class ValueParserTests
     // DateTime testing
     [Theory]
     [ClassData(typeof(CorrectDateTimeData))]
-    public void SetProperty_ShouldSerializeDateTime_WhenGivenDateTimePropertyAndDateTimeValue(string input, DateTime expect)
+    public void SetProperty_ShouldSerializeDateTime_WhenGivenDateTimePropertyAndDateTimeValue(string input,
+        DateTime expect)
     {
         // Arrange
         var key = "dateTime"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.DateTime.Should().Be(expect);
+        _sut.DateTime.Should().Be(expect);
     }
-    
+
     [Theory]
     [ClassData(typeof(IncorrectDateTimeData))]
     public void SetProperty_ShouldThrow_WhenGivenDateTimePropertyAndIncorrectValue(string input)
     {
         // Arrange
         var key = "dateTime"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // DateTimeOffset testing
     [Theory]
     [ClassData(typeof(CorrectDateTimeOffsetData))]
-    public void SetProperty_ShouldSerializeDateTimeOffset_WhenGivenDateTimeOffsetPropertyAndDateTimeOffsetValue(string input, DateTimeOffset expect)
+    public void SetProperty_ShouldSerializeDateTimeOffset_WhenGivenDateTimeOffsetPropertyAndDateTimeOffsetValue(
+        string input, DateTimeOffset expect)
     {
         // Arrange
         var key = "dateTimeOffset"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.DateTimeOffset.Should().Be(expect);
+        _sut.DateTimeOffset.Should().Be(expect);
     }
-    
+
     [Theory]
     [ClassData(typeof(IncorrectDateTimeData))]
     public void SetProperty_ShouldThrow_WhenGivenDateTimeOffsetPropertyAndIncorrectValue(string input)
     {
         // Arrange
         var key = "dateTimeOffset"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // TimeSpan testing
     [Theory]
     [ClassData(typeof(CorrectTimeSpanData))]
-    public void SetProperty_ShouldSerializeTimeSpan_WhenGivenDateTimeOffsetPropertyAndDateTimeOffsetValue(string input, TimeSpan expect)
+    public void SetProperty_ShouldSerializeTimeSpan_WhenGivenDateTimeOffsetPropertyAndDateTimeOffsetValue(string input,
+        TimeSpan expect)
     {
         // Arrange
         var key = "timeSpan"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.TimeSpan.Should().Be(expect);
+        _sut.TimeSpan.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData(".1990")]
     [InlineData("Haha")]
@@ -182,17 +182,16 @@ public class ValueParserTests
     {
         // Arrange
         var key = "timeSpan"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // Guid testing
     [Theory]
     [ClassData(typeof(CorrectGuidData))]
@@ -200,17 +199,16 @@ public class ValueParserTests
     {
         // Arrange
         var key = "guid"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Guid.Should().Be(expect);
+        _sut.Guid.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("{EC883631-3B5A-4B80-BD7A-8A0024817D66}")]
     [InlineData("""
@@ -222,39 +220,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "guid"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // sbyte testing
     [Theory]
-    [InlineData("1",1)]
-    [InlineData("100",100)]
-    [InlineData("-100",-100)]
-    [InlineData("127",sbyte.MaxValue)]
-    [InlineData("-128",sbyte.MinValue)]
+    [InlineData("1", 1)]
+    [InlineData("100", 100)]
+    [InlineData("-100", -100)]
+    [InlineData("127", sbyte.MaxValue)]
+    [InlineData("-128", sbyte.MinValue)]
     public void SetProperty_ShouldSerializeSbyte_WhenGivenSbytePropertyAndSbyteValue(string input, sbyte expect)
     {
         // Arrange
         var key = "sbyte"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Sbyte.Should().Be(expect);
+        _sut.Sbyte.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("900")]
     [InlineData("""
@@ -269,39 +267,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "sbyte"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // byte testing
     [Theory]
-    [InlineData("1",1)]
-    [InlineData("100",100)]
-    [InlineData("123",123)]
-    [InlineData("255",byte.MaxValue)]
-    [InlineData("0",byte.MinValue)]
+    [InlineData("1", 1)]
+    [InlineData("100", 100)]
+    [InlineData("123", 123)]
+    [InlineData("255", byte.MaxValue)]
+    [InlineData("0", byte.MinValue)]
     public void SetProperty_ShouldSerializeByte_WhenGivenBytePropertyAndByteValue(string input, byte expect)
     {
         // Arrange
         var key = "byte"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Byte.Should().Be(expect);
+        _sut.Byte.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("900")]
     [InlineData("""
@@ -316,39 +314,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "byte"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // short testing
     [Theory]
-    [InlineData("-1",-1)]
-    [InlineData("0",0)]
-    [InlineData("123",123)]
-    [InlineData("32767",short.MaxValue)]
-    [InlineData("-32768",short.MinValue)]
+    [InlineData("-1", -1)]
+    [InlineData("0", 0)]
+    [InlineData("123", 123)]
+    [InlineData("32767", short.MaxValue)]
+    [InlineData("-32768", short.MinValue)]
     public void SetProperty_ShouldSerializeShort_WhenGivenShortPropertyAndShortValue(string input, short expect)
     {
         // Arrange
         var key = "short"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Short.Should().Be(expect);
+        _sut.Short.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("-32769")]
     [InlineData("32768")]
@@ -362,39 +360,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "short"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // ushort testing
     [Theory]
-    [InlineData("1",1)]
-    [InlineData("0",0)]
-    [InlineData("123",123)]
-    [InlineData("65535",ushort.MaxValue)]
-    [InlineData("0",ushort.MinValue)]
+    [InlineData("1", 1)]
+    [InlineData("0", 0)]
+    [InlineData("123", 123)]
+    [InlineData("65535", ushort.MaxValue)]
+    [InlineData("0", ushort.MinValue)]
     public void SetProperty_ShouldSerializeUshort_WhenGivenUshortPropertyAndUshortValue(string input, ushort expect)
     {
         // Arrange
         var key = "ushort"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Ushort.Should().Be(expect);
+        _sut.Ushort.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("-1")]
     [InlineData("65536")]
@@ -408,39 +406,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "ushort"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // int testing
     [Theory]
-    [InlineData("-1",-1)]
-    [InlineData("0",0)]
-    [InlineData("123",123)]
-    [InlineData("2147483647",int.MaxValue)]
-    [InlineData("-2147483648",int.MinValue)]
+    [InlineData("-1", -1)]
+    [InlineData("0", 0)]
+    [InlineData("123", 123)]
+    [InlineData("2147483647", int.MaxValue)]
+    [InlineData("-2147483648", int.MinValue)]
     public void SetProperty_ShouldSerializeInt_WhenGivenIntPropertyAndIntValue(string input, int expect)
     {
         // Arrange
         var key = "int"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Int.Should().Be(expect);
+        _sut.Int.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("-2147483649")]
     [InlineData("2147483648")]
@@ -454,39 +452,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "int"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // uint testing
     [Theory]
-    [InlineData("1",1)]
-    [InlineData("0",0)]
-    [InlineData("123",123)]
-    [InlineData("4294967295",uint.MaxValue)]
-    [InlineData("0",uint.MinValue)]
+    [InlineData("1", 1)]
+    [InlineData("0", 0)]
+    [InlineData("123", 123)]
+    [InlineData("4294967295", uint.MaxValue)]
+    [InlineData("0", uint.MinValue)]
     public void SetProperty_ShouldSerializeUint_WhenGivenUintPropertyAndUintValue(string input, uint expect)
     {
         // Arrange
         var key = "uint"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Uint.Should().Be(expect);
+        _sut.Uint.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("-1")]
     [InlineData("4294967296")]
@@ -500,39 +498,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "uint"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // long testing
     [Theory]
-    [InlineData("-1",-1)]
-    [InlineData("0",0)]
-    [InlineData("123",123)]
-    [InlineData("9223372036854775807",long.MaxValue)]
-    [InlineData("-9223372036854775808",long.MinValue)]
+    [InlineData("-1", -1)]
+    [InlineData("0", 0)]
+    [InlineData("123", 123)]
+    [InlineData("9223372036854775807", long.MaxValue)]
+    [InlineData("-9223372036854775808", long.MinValue)]
     public void SetProperty_ShouldSerializeLong_WhenGivenLongPropertyAndLongValue(string input, long expect)
     {
         // Arrange
         var key = "long"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Long.Should().Be(expect);
+        _sut.Long.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("-9223372036854775809")]
     [InlineData("9223372036854775808")]
@@ -546,39 +544,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "long"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
         var value = Encoding.UTF8.GetBytes(input);
+        
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // ulong testing
     [Theory]
-    [InlineData("1",1)]
-    [InlineData("0",0)]
-    [InlineData("123",123)]
-    [InlineData("18446744073709551615",ulong.MaxValue)]
-    [InlineData("0",ulong.MinValue)]
+    [InlineData("1", 1)]
+    [InlineData("0", 0)]
+    [InlineData("123", 123)]
+    [InlineData("18446744073709551615", ulong.MaxValue)]
+    [InlineData("0", ulong.MinValue)]
     public void SetProperty_ShouldSerializeUlong_WhenGivenUlongPropertyAndUlongValue(string input, ulong expect)
     {
         // Arrange
         var key = "ulong"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
+
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Ulong.Should().Be(expect);
+        _sut.Ulong.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("-1")]
     [InlineData("18446744073709551616")]
@@ -592,39 +590,39 @@ public class ValueParserTests
     {
         // Arrange
         var key = "ulong"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
 
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // float testing
     [Theory]
-    [InlineData("-1",-1)]
-    [InlineData("0",0)]
-    [InlineData("123",123)]
-    [InlineData("3.4028235E+38",float.MaxValue)]
-    [InlineData("-3.4028235E+38",float.MinValue)]
+    [InlineData("-1", -1)]
+    [InlineData("0", 0)]
+    [InlineData("123", 123)]
+    [InlineData("3.4028235E+38", float.MaxValue)]
+    [InlineData("-3.4028235E+38", float.MinValue)]
     public void SetProperty_ShouldSerializeFloat_WhenGivenFloatPropertyAndFloatValue(string input, float expect)
     {
         // Arrange
         var key = "float"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
+
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Float.Should().Be(expect);
+        _sut.Float.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("infintelylong will be accepeted")]
     [InlineData("prett ymuch any number that starts4.40.28249+49")]
@@ -638,39 +636,40 @@ public class ValueParserTests
     {
         // Arrange
         var key = "float"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
+        
 
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();
     }
-    
+
     // double testing
     [Theory]
-    [InlineData("-1",-1)]
-    [InlineData("0",0)]
-    [InlineData("123",123)]
-    [InlineData("3.4028235E+38",float.MaxValue)]
-    [InlineData("-3.4028235E+38",float.MinValue)]
+    [InlineData("-1", -1)]
+    [InlineData("0", 0)]
+    [InlineData("123", 123)]
+    [InlineData("3.4028235E+38", float.MaxValue)]
+    [InlineData("-3.4028235E+38", float.MinValue)]
     public void SetProperty_ShouldSerializeDouble_WhenGivenDoublePropertyAndDoubleValue(string input, float expect)
     {
         // Arrange
         var key = "float"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
-        
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
+
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        ValueParser.SetProperty(_options, keyValueProperty, value);
+        ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
-        _options.Float.Should().Be(expect);
+        _sut.Float.Should().Be(expect);
     }
-    
+
     [Theory]
     [InlineData("infintelylong will be accepeted")]
     [InlineData("prett ymuch any number that starts4.40.28249+49")]
@@ -684,12 +683,12 @@ public class ValueParserTests
     {
         // Arrange
         var key = "float"u8;
-        var keyValueProperty = _cache.GetKeyValueProperty(key);
+        _cache.TryGetKeyValueProperty(key, out var keyValueProperty);
 
         var value = Encoding.UTF8.GetBytes(input);
 
         // Act
-        var result = () => ValueParser.SetProperty(_options, keyValueProperty, value);
+        var result = () => ValueParser.SetProperty(_sut, keyValueProperty!, value, _config);
 
         // Assert
         result.Should().Throw<FormatException>();

@@ -36,7 +36,7 @@ public static class KeyValueSerializer
         {
             return cache;
         }
-        
+
         cache = new KeyValueCache(type);
         KeyValueCaches.Add(type, cache);
 

@@ -10,37 +10,16 @@ internal static class Serializer
     {
         var pipeWriter = PipeWriter.Create(stream);
 
-        // Move to configuration?
-        Span<byte> keyValueSeparator = stackalloc byte[3];
-        keyValueSeparator[0] = options.Space;
-        keyValueSeparator[1] = options.ValueStart;
-        keyValueSeparator[2] = options.Space;
-        
-        Span<byte> newKeyValuePair = stackalloc byte[1 + options.NewLine.Length];
-        newKeyValuePair[0] = options.ValueEnd;
-        options.NewLine.CopyTo(newKeyValuePair.Slice(1));
-
         foreach (var property in cache.Properties)
         {
-            // Get the value from the object to be serialized, if no value is assigned the key and value is skipped
             var propertyValue = property.GetValue(serverOptions);
             if (propertyValue is null)
             {
                 continue;
             }
 
-            // Write key name and separator to the stream
-            var keyNameLength = property.KeyName.Length;
-            var keyNameAndSeparatorLength = keyNameLength + keyValueSeparator.Length;
+            pipeWriter.WriteKeyNameAndSeparator(options, property);
 
-            var keyNameAndSeparator = pipeWriter.GetSpan(keyNameAndSeparatorLength);
-
-            property.KeyName.CopyTo(keyNameAndSeparator);
-            keyValueSeparator.CopyTo(keyNameAndSeparator.Slice(keyNameLength));
-
-            pipeWriter.Advance(keyNameAndSeparatorLength);
-
-            // Write value to the stream
             if (!property.IsArray)
             {
                 pipeWriter.WritePropertyValueAndAdvance(propertyValue, options, property.FileType);
@@ -50,35 +29,44 @@ internal static class Serializer
                 pipeWriter.WritePropertyArrayValueAndAdvance(propertyValue, options, property.FileType);
             }
 
-            // Write the value end and start a new line
-            pipeWriter.WriteAndAdvance(newKeyValuePair);
+            pipeWriter.WriteAndAdvance(options.EndAndNewLine);
         }
 
         pipeWriter.Complete();
     }
 
+    private static void WriteKeyNameAndSeparator(this PipeWriter pipeWriter, KeyValueConfiguration options,
+        KeyValueProperty property)
+    {
+        var keyNameLength = property.KeyName.Length;
+        var keyNameAndSeparatorLength = keyNameLength + options.KeyValueSeparator.Length;
+
+        var keyNameAndSeparator = pipeWriter.GetSpan(keyNameAndSeparatorLength);
+
+        property.KeyName.CopyTo(keyNameAndSeparator);
+        options.KeyValueSeparator.CopyTo(keyNameAndSeparator.Slice(keyNameLength));
+
+        pipeWriter.Advance(keyNameAndSeparatorLength);
+    }
+
     private static void WritePropertyArrayValueAndAdvance(this PipeWriter pipeWriter, object propertyValue,
-        KeyValueConfiguration options, FileType fileType)
+        KeyValueConfiguration config, FileType fileType)
     {
         var propertyValues = (Array)propertyValue;
-        Span<byte> span = stackalloc byte[2];
-        span[0] = options.ArraySeparator;
-        span[1] = options.Space;
-        
-        pipeWriter.WriteAndAdvance(options.ArrayStart);
+
+        pipeWriter.WriteAndAdvance(config.ArrayStart);
 
         for (var index = 0; index < propertyValues.Length; index++)
         {
-            pipeWriter.WritePropertyValueAndAdvance(propertyValues.GetValue(index)!, options, fileType);
-            
+            pipeWriter.WritePropertyValueAndAdvance(propertyValues.GetValue(index)!, config, fileType);
+
             if (index != propertyValues.Length - 1)
             {
-                pipeWriter.WriteAndAdvance(span);
-                
+                pipeWriter.WriteAndAdvance(config.ArraySeparatorAndSpace);
             }
         }
 
-        pipeWriter.WriteAndAdvance(options.ArrayEnd);
+        pipeWriter.WriteAndAdvance(config.ArrayEnd);
     }
 
     private static void WriteAndAdvance(this PipeWriter pipeWriter, ReadOnlySpan<byte> value)
