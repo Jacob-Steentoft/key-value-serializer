@@ -1,0 +1,43 @@
+name: Nuget Publishing
+
+on:
+  push:
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
+
+env:
+  Configuration: Release
+  NugetSource: https://api.nuget.org/v3/index.json
+  ProjectName: KeyValueSerializer
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Verify commit exists in origin/main
+      run: |
+        git fetch --no-tags --prune --depth=1 origin +refs/heads/*:refs/remotes/origin/*
+        git branch --remote --contains | grep origin/main
+
+    - name: Set version variable from tag
+      run: echo "version=${GITHUB_REF/refs\/tags\/v/}" >> $GITHUB_ENV
+
+    - name: Build
+      run: dotnet build --configuration $Configuration /p:Version=${version}
+
+    - name: Test
+      run: dotnet test --configuration $Configuration /p:Version=${version} --no-build
+      
+    - name: Pack
+      run: dotnet pack --configuration $Configuration /p:Version=${version} --no-build --output .
+
+    - name: Push
+      run: dotnet nuget push $ProjectName.${version}.nupkg --source $NugetSource --api-key ${NUGET_TOKEN}
+
+      env:
+        NUGET_TOKEN: ${{ secrets.NUGETKEY }}
