@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using CommunityToolkit.Diagnostics;
 using CommunityToolkit.HighPerformance.Helpers;
@@ -12,6 +13,7 @@ internal sealed class KeyValueCache
 
         Properties = new KeyValueProperty[properties.Length];
         _lookupTable = new int[properties.Length];
+        // TODO: Investigate span performance
 
         for (var index = 0; index < properties.Length; index++)
         {
@@ -33,9 +35,9 @@ internal sealed class KeyValueCache
     public readonly KeyValueProperty[] Properties;
     private readonly int[] _lookupTable;
 
-    public bool TryGetKeyValueProperty(scoped ReadOnlySpan<byte> settingName, out KeyValueProperty? property)
+    public bool TryGetKeyValueProperty(scoped ReadOnlySpan<byte> propertyName, [MaybeNullWhen(false)] out KeyValueProperty property)
     {
-        var hash = CalculateHash(settingName);
+        var hash = CalculateHash(propertyName);
         var index = _lookupTable.AsSpan().IndexOf(hash);
         if (index < 0)
         {
@@ -47,5 +49,5 @@ internal sealed class KeyValueCache
         return true;
     }
 
-    private static int CalculateHash(scoped ReadOnlySpan<byte> settingName) => HashCode<byte>.Combine(settingName);
+    private static int CalculateHash(scoped ReadOnlySpan<byte> propertyName) => HashCode<byte>.Combine(propertyName);
 }
